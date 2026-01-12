@@ -13,14 +13,34 @@ interface NewsletterSignupProps {
 export function NewsletterSignup({ variant = "card" }: NewsletterSignupProps) {
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
+  const [message, setMessage] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus("loading")
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setStatus("success")
-    setEmail("")
+    setMessage("")
+
+    try {
+      const response = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setStatus("success")
+        setMessage(data.message || "Successfully subscribed!")
+        setEmail("")
+      } else {
+        setStatus("error")
+        setMessage(data.error || "Failed to subscribe. Please try again.")
+      }
+    } catch (error) {
+      setStatus("error")
+      setMessage("Something went wrong. Please try again later.")
+    }
   }
 
   if (variant === "inline") {
@@ -53,26 +73,31 @@ export function NewsletterSignup({ variant = "card" }: NewsletterSignupProps) {
         Get our weekly market brief and daily snapshots delivered to your inbox.
       </p>
       {status === "success" ? (
-        <p className="text-sm text-accent font-medium">Thank you for subscribing!</p>
+        <p className="text-sm text-green-600 font-medium">{message}</p>
       ) : (
-        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
-          <Input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="flex-1 rounded-sm bg-background"
-            disabled={status === "loading"}
-          />
-          <Button
-            type="submit"
-            className="rounded-sm bg-primary text-primary-foreground hover:bg-primary/90"
-            disabled={status === "loading"}
-          >
-            {status === "loading" ? "Subscribing..." : "Subscribe"}
-          </Button>
-        </form>
+        <>
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
+            <Input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="flex-1 rounded-sm bg-background"
+              disabled={status === "loading"}
+            />
+            <Button
+              type="submit"
+              className="rounded-sm bg-primary text-primary-foreground hover:bg-primary/90"
+              disabled={status === "loading"}
+            >
+              {status === "loading" ? "Subscribing..." : "Subscribe"}
+            </Button>
+          </form>
+          {status === "error" && (
+            <p className="text-sm text-red-600 mt-2">{message}</p>
+          )}
+        </>
       )}
     </div>
   )
