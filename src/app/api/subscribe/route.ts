@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { Resend } from 'resend'
+import sgMail from '@sendgrid/mail'
 
 // Use service role to bypass RLS
 const supabaseAdmin = createClient(
@@ -14,7 +14,10 @@ const supabaseAdmin = createClient(
   }
 )
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+// Initialize SendGrid
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+}
 
 export async function POST(request: Request) {
   try {
@@ -57,22 +60,30 @@ export async function POST(request: Request) {
         }
 
         // Send welcome back email
-        if (resend) {
-          await resend.emails.send({
-            from: 'Main Line Briefing Room <noreply@yourdomain.com>',
-            to: email,
-            subject: 'Welcome back to Main Line Briefing Room!',
-            html: `
-              <h1>Welcome back!</h1>
-              <p>You've successfully resubscribed to the Main Line Briefing Room newsletter.</p>
-              <p>You'll receive updates about new articles and market insights.</p>
-              <br />
-              <p style="font-size: 12px; color: #666;">
-                Don't want to receive these emails?
-                <a href="${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?email=${encodeURIComponent(email)}">Unsubscribe</a>
-              </p>
-            `
-          })
+        if (process.env.SENDGRID_API_KEY) {
+          try {
+            const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'mainlinebriefingroom@gmail.com'
+
+            await sgMail.send({
+              from: fromEmail,
+              to: email,
+              subject: 'Welcome back to Main Line Briefing Room!',
+              html: `
+                <h1>Welcome back!</h1>
+                <p>You've successfully resubscribed to the Main Line Briefing Room newsletter.</p>
+                <p>You'll receive updates about new articles and market insights.</p>
+                <br />
+                <p style="font-size: 12px; color: #666;">
+                  Don't want to receive these emails?
+                  <a href="${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?email=${encodeURIComponent(email)}">Unsubscribe</a>
+                </p>
+              `
+            })
+            console.log('Welcome back email sent successfully to:', email)
+          } catch (emailError: any) {
+            console.error('Failed to send welcome back email:', emailError)
+            console.error('Email error details:', emailError.message)
+          }
         }
 
         return NextResponse.json({
@@ -92,10 +103,12 @@ export async function POST(request: Request) {
     }
 
     // Send welcome email
-    if (resend) {
+    if (process.env.SENDGRID_API_KEY) {
       try {
-        await resend.emails.send({
-          from: 'Main Line Briefing Room <onboarding@resend.dev>',
+        const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'mainlinebriefingroom@gmail.com'
+
+        await sgMail.send({
+          from: fromEmail,
           to: email,
           subject: 'Welcome to Main Line Briefing Room!',
           html: `
@@ -127,7 +140,7 @@ export async function POST(request: Request) {
         // Don't fail the subscription if email fails
       }
     } else {
-      console.log('Resend not configured - subscription saved without email')
+      console.log('SendGrid not configured - subscription saved without email')
     }
 
     return NextResponse.json({
