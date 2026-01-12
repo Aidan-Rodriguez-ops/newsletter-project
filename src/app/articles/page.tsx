@@ -1,11 +1,36 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ArticleCard } from "@/components/article-card"
 import { NewsletterSignup } from "@/components/newsletter-signup"
-import { sampleArticles, categories } from "@/lib/sample-data"
+import { categories } from "@/lib/sample-data"
 import Link from "next/link"
 
 export default function ArticlesPage() {
+  const [articles, setArticles] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchArticles() {
+      try {
+        const response = await fetch('/api/articles?limit=20')
+        const data = await response.json()
+
+        if (data.articles) {
+          setArticles(data.articles)
+        }
+
+        setLoading(false)
+      } catch (error) {
+        console.error('Error fetching articles:', error)
+        setLoading(false)
+      }
+    }
+
+    fetchArticles()
+  }, [])
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -50,26 +75,38 @@ export default function ArticlesPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
               {/* Main Content */}
               <div className="lg:col-span-2">
-                <div className="grid grid-cols-1 gap-0">
-                  {sampleArticles.map((article) => (
-                    <ArticleCard
-                      key={article.slug}
-                      title={article.title}
-                      excerpt={article.excerpt}
-                      category={article.category}
-                      categorySlug={article.categorySlug}
-                      date={article.date}
-                      slug={article.slug}
-                    />
-                  ))}
-                </div>
+                {loading ? (
+                  <div className="text-center text-muted-foreground py-12">
+                    Loading articles...
+                  </div>
+                ) : articles.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-12">
+                    No articles available yet. Check back soon!
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-0">
+                    {articles.map((article) => (
+                      <ArticleCard
+                        key={article.slug}
+                        title={article.title}
+                        excerpt={article.excerpt || ''}
+                        category={article.category}
+                        categorySlug={article.category_slug}
+                        date={article.published_at || article.created_at}
+                        slug={article.slug}
+                      />
+                    ))}
+                  </div>
+                )}
 
                 {/* Load More */}
-                <div className="mt-8 text-center">
-                  <button className="px-6 py-2 text-sm font-medium text-muted-foreground border border-border hover:border-foreground/20 rounded-sm transition-colors">
-                    Load more articles
-                  </button>
-                </div>
+                {articles.length > 0 && (
+                  <div className="mt-8 text-center">
+                    <button className="px-6 py-2 text-sm font-medium text-muted-foreground border border-border hover:border-foreground/20 rounded-sm transition-colors">
+                      Load more articles
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Sidebar */}
@@ -88,7 +125,7 @@ export default function ArticlesPage() {
                               {category.name}
                             </span>
                             <span className="text-xs text-muted-foreground/60">
-                              {sampleArticles.filter((a) => a.categorySlug === category.slug).length}
+                              {articles.filter((a) => a.category_slug === category.slug).length}
                             </span>
                           </Link>
                         </li>
@@ -97,23 +134,25 @@ export default function ArticlesPage() {
                   </div>
 
                   {/* Popular Articles */}
-                  <div className="border border-border p-6">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground mb-4">
-                      Most Popular
-                    </h3>
-                    <ul className="space-y-4">
-                      {sampleArticles.slice(0, 3).map((article, index) => (
-                        <li key={article.slug} className="flex gap-3">
-                          <span className="font-serif text-2xl text-muted-foreground/30">{index + 1}</span>
-                          <Link href={`/articles/${article.slug}`} className="group flex-1">
-                            <h4 className="text-sm text-foreground group-hover:text-accent transition-colors line-clamp-2 leading-snug">
-                              {article.title}
-                            </h4>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  {articles.length > 0 && (
+                    <div className="border border-border p-6">
+                      <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground mb-4">
+                        Most Popular
+                      </h3>
+                      <ul className="space-y-4">
+                        {articles.slice(0, 3).map((article, index) => (
+                          <li key={article.slug} className="flex gap-3">
+                            <span className="font-serif text-2xl text-muted-foreground/30">{index + 1}</span>
+                            <Link href={`/articles/${article.slug}`} className="group flex-1">
+                              <h4 className="text-sm text-foreground group-hover:text-accent transition-colors line-clamp-2 leading-snug">
+                                {article.title}
+                              </h4>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </aside>
             </div>

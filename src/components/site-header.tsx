@@ -1,17 +1,15 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const navigation = [
-  { name: "Deal Flow", href: "/category/deal-flow" },
-  { name: "Macro", href: "/category/macro" },
-  { name: "Current Events", href: "/category/current-events" },
-  { name: "Equity Opinions", href: "/category/equity-opinions" },
-  { name: "Education", href: "/category/education" },
+  { name: "Articles", href: "/articles" },
   { name: "The Contrarian", href: "/the-contrarian" },
+  { name: "Market Overview", href: "/market-overview" },
 ]
 
 export function SiteHeader() {
@@ -22,9 +20,15 @@ export function SiteHeader() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <nav className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <span className="font-serif text-xl text-foreground">Main Line</span>
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Briefing Room</span>
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/mainlinelogo.png"
+              alt="Main Line Briefing Room"
+              width={540}
+              height={180}
+              className="h-36 w-auto"
+              priority
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -44,6 +48,9 @@ export function SiteHeader() {
           <div className="hidden lg:flex lg:items-center lg:gap-4">
             <Link href="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground">
               About
+            </Link>
+            <Link href="/admin/login" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+              Admin
             </Link>
             <Button asChild size="sm" className="rounded-sm bg-primary text-primary-foreground hover:bg-primary/90">
               <Link href="/subscribe">Subscribe</Link>
@@ -78,6 +85,9 @@ export function SiteHeader() {
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
                 <Link href="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground">
                   About
+                </Link>
+                <Link href="/admin/login" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                  Admin
                 </Link>
                 <Button asChild size="sm" className="w-fit rounded-sm bg-primary text-primary-foreground">
                   <Link href="/subscribe">Subscribe</Link>

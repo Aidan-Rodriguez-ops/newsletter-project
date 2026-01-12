@@ -1,3 +1,6 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { MarketTicker } from "@/components/market-ticker"
@@ -5,37 +8,83 @@ import { NewsletterSignup } from "@/components/newsletter-signup"
 import { MarketSummaryCard } from "@/components/market-summary-card"
 import { TopMovers } from "@/components/top-movers"
 import { ArticleCard } from "@/components/article-card"
-import { sampleArticles } from "@/lib/sample-data"
+import { DisclosureModal } from "@/components/disclosure-modal"
 
 export default function Home() {
-  const featuredArticles = sampleArticles.slice(0, 3)
+  const [featuredArticles, setFeaturedArticles] = useState<any[]>([])
 
-  // Sample market data
-  const marketData = {
+  // State for market data
+  const [marketData, setMarketData] = useState({
     name: "S&P 500",
-    value: "4,783.45",
-    change: 45.23,
-    changePercent: 0.95,
-    high: "4,796.12",
-    low: "4,765.33",
-    volume: "3.2B"
-  }
+    value: "Loading...",
+    change: 0,
+    changePercent: 0,
+    high: undefined,
+    low: undefined,
+    volume: undefined
+  })
 
-  const topMovers = {
-    gainers: [
-      { symbol: "NVDA", name: "NVIDIA Corp", price: "495.22", change: 18.45, changePercent: 3.87 },
-      { symbol: "AAPL", name: "Apple Inc", price: "185.64", change: 5.32, changePercent: 2.95 },
-      { symbol: "MSFT", name: "Microsoft Corp", price: "378.91", change: 8.12, changePercent: 2.19 }
-    ],
-    losers: [
-      { symbol: "TSLA", name: "Tesla Inc", price: "238.45", change: -12.34, changePercent: -4.92 },
-      { symbol: "META", name: "Meta Platforms", price: "352.18", change: -9.76, changePercent: -2.70 },
-      { symbol: "AMZN", name: "Amazon.com", price: "151.94", change: -3.28, changePercent: -2.11 }
-    ]
-  }
+  const [topMovers, setTopMovers] = useState({
+    gainers: [] as any[],
+    losers: [] as any[]
+  })
+
+  const [loading, setLoading] = useState(true)
+
+  // Fetch market data
+  useEffect(() => {
+    async function fetchMarketData() {
+      try {
+        const response = await fetch('/api/market')
+        const data = await response.json()
+
+        if (data.marketData) {
+          setMarketData({
+            ...data.marketData,
+            change: parseFloat(data.marketData.change),
+            changePercent: parseFloat(data.marketData.changePercent)
+          })
+        }
+
+        if (data.topMovers) {
+          setTopMovers(data.topMovers)
+        }
+
+        setLoading(false)
+      } catch (error) {
+        console.error('Error fetching market data:', error)
+        setLoading(false)
+      }
+    }
+
+    fetchMarketData()
+
+    // Refresh every 30 minutes
+    const interval = setInterval(fetchMarketData, 30 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Fetch featured articles from Supabase
+  useEffect(() => {
+    async function fetchArticles() {
+      try {
+        const response = await fetch('/api/articles?limit=3')
+        const data = await response.json()
+
+        if (data.articles) {
+          setFeaturedArticles(data.articles)
+        }
+      } catch (error) {
+        console.error('Error fetching articles:', error)
+      }
+    }
+
+    fetchArticles()
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
+      <DisclosureModal />
       <SiteHeader />
       <MarketTicker />
 
@@ -73,18 +122,24 @@ export default function Home() {
             </a>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            {featuredArticles.map((article) => (
-              <ArticleCard
-                key={article.slug}
-                title={article.title}
-                excerpt={article.excerpt}
-                category={article.category}
-                categorySlug={article.categorySlug}
-                date={article.date}
-                slug={article.slug}
-                featured
-              />
-            ))}
+            {featuredArticles.length === 0 ? (
+              <div className="col-span-3 text-center text-muted-foreground py-8">
+                No articles available yet. Check back soon!
+              </div>
+            ) : (
+              featuredArticles.map((article) => (
+                <ArticleCard
+                  key={article.slug}
+                  title={article.title}
+                  excerpt={article.excerpt || ''}
+                  category={article.category}
+                  categorySlug={article.category_slug}
+                  date={article.published_at || article.created_at}
+                  slug={article.slug}
+                  featured
+                />
+              ))
+            )}
           </div>
         </section>
       </main>
