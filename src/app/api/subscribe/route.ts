@@ -95,7 +95,7 @@ export async function POST(request: Request) {
     if (resend) {
       try {
         await resend.emails.send({
-          from: 'Main Line Briefing Room <noreply@yourdomain.com>',
+          from: 'Main Line Briefing Room <onboarding@resend.dev>',
           to: email,
           subject: 'Welcome to Main Line Briefing Room!',
           html: `
@@ -120,10 +120,14 @@ export async function POST(request: Request) {
             </div>
           `
         })
-      } catch (emailError) {
+        console.log('Welcome email sent successfully to:', email)
+      } catch (emailError: any) {
         console.error('Failed to send welcome email:', emailError)
+        console.error('Email error details:', emailError.message)
         // Don't fail the subscription if email fails
       }
+    } else {
+      console.log('Resend not configured - subscription saved without email')
     }
 
     return NextResponse.json({
