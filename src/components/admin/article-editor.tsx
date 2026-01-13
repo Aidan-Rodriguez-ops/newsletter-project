@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Save, Eye } from 'lucide-react'
+import { RichTextEditor } from '@/components/admin/rich-text-editor'
 
 interface ArticleEditorProps {
   article?: Article
@@ -172,13 +173,9 @@ export function ArticleEditor({ article, mode }: ArticleEditorProps) {
 
       <div className="space-y-2">
         <Label htmlFor="content">Content</Label>
-        <Textarea
-          id="content"
-          value={formData.content}
-          onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-          placeholder="Write your article content here (supports markdown)"
-          rows={20}
-          required
+        <RichTextEditor
+          content={formData.content}
+          onChange={(content) => setFormData({ ...formData, content })}
         />
       </div>
 

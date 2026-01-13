@@ -3,31 +3,38 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ArticleCard } from "@/components/article-card"
 import { NewsletterSignup } from "@/components/newsletter-signup"
-import { sampleArticles } from "@/lib/sample-data"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { createServerSupabaseClient } from "@/lib/supabase/server"
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>
 }
 
-export async function generateStaticParams() {
-  return sampleArticles.map((article) => ({
-    slug: article.slug,
-  }))
-}
-
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params
-  const article = sampleArticles.find((a) => a.slug === slug)
+  const supabase = await createServerSupabaseClient()
 
-  if (!article) {
+  // Fetch article from Supabase
+  const { data: article, error } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('slug', slug)
+    .eq('status', 'published')
+    .single()
+
+  if (error || !article) {
     notFound()
   }
 
-  const relatedArticles = sampleArticles
-    .filter((a) => a.categorySlug === article.categorySlug && a.slug !== article.slug)
-    .slice(0, 3)
+  // Fetch related articles
+  const { data: relatedArticles } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('category_slug', article.category_slug)
+    .eq('status', 'published')
+    .neq('slug', slug)
+    .limit(3)
 
   return (
     <div className="min-h-screen bg-background">
@@ -40,7 +47,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
               <nav className="mb-6">
                 <Link
-                  href={`/category/${article.categorySlug}`}
+                  href={`/category/${article.category_slug}`}
                   className="text-sm text-accent hover:underline transition-colors"
                 >
                   ← {article.category}
@@ -50,14 +57,20 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <div className="flex items-center gap-3 mb-6">
                 <span className="text-xs font-semibold uppercase tracking-wider text-accent">{article.category}</span>
                 <span className="text-xs text-muted-foreground">•</span>
-                <time className="text-xs text-muted-foreground">{article.date}</time>
+                <time className="text-xs text-muted-foreground">
+                  {new Date(article.published_at || article.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </time>
               </div>
 
               <h1 className="font-serif text-3xl lg:text-4xl xl:text-5xl text-foreground leading-tight mb-6 text-balance">
                 {article.title}
               </h1>
 
-              <p className="text-lg text-muted-foreground leading-relaxed">{article.excerpt}</p>
+              <p className="text-lg text-muted-foreground leading-relaxed">{article.excerpt || ''}</p>
 
               <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -111,16 +124,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
                 {/* Main Content */}
                 <div className="lg:col-span-8">
-                  <div className="prose prose-lg max-w-none prose-headings:font-serif prose-headings:font-normal prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-p:text-muted-foreground prose-p:leading-relaxed prose-li:text-muted-foreground prose-strong:text-foreground prose-blockquote:border-l-accent prose-blockquote:text-muted-foreground prose-blockquote:italic prose-a:text-accent prose-a:no-underline hover:prose-a:underline">
-                    {article.content ? (
-                      <ArticleContent content={article.content} />
-                    ) : (
-                      <div className="text-muted-foreground">
-                        <p className="mb-6">{article.excerpt}</p>
-                        <p className="text-sm italic">Full article content coming soon.</p>
-                      </div>
-                    )}
-                  </div>
+                  {article.content ? (
+                    <div
+                      className="prose prose-lg max-w-none prose-headings:font-serif prose-h1:text-3xl prose-h1:font-bold prose-h2:text-2xl prose-h2:font-semibold prose-h3:text-xl prose-h3:font-semibold prose-p:text-foreground prose-p:leading-relaxed prose-li:text-foreground prose-strong:font-bold prose-blockquote:border-l-4 prose-blockquote:border-border prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm"
+                      dangerouslySetInnerHTML={{ __html: article.content }}
+                    />
+                  ) : (
+                    <div className="text-muted-foreground">
+                      <p className="mb-6">{article.excerpt || ''}</p>
+                      <p className="text-sm italic">Full article content coming soon.</p>
+                    </div>
+                  )}
 
                   {/* Article Footer */}
                   <div className="mt-12 pt-8 border-t border-border">
@@ -157,7 +171,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         </article>
 
         {/* Related Articles */}
-        {relatedArticles.length > 0 && (
+        {relatedArticles && relatedArticles.length > 0 && (
           <section className="border-b border-border">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-8">
@@ -168,10 +182,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   <ArticleCard
                     key={related.slug}
                     title={related.title}
-                    excerpt={related.excerpt}
+                    excerpt={related.excerpt || ''}
                     category={related.category}
-                    categorySlug={related.categorySlug}
-                    date={related.date}
+                    categorySlug={related.category_slug}
+                    date={related.published_at || related.created_at}
                     slug={related.slug}
                   />
                 ))}
@@ -184,114 +198,4 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       <SiteFooter />
     </div>
   )
-}
-
-// Simple markdown-like content renderer
-function ArticleContent({ content }: { content: string }) {
-  const lines = content.trim().split("\n")
-  const elements: React.ReactNode[] = []
-  let currentList: string[] = []
-  let inBlockquote = false
-  let blockquoteContent: string[] = []
-
-  const flushList = () => {
-    if (currentList.length > 0) {
-      elements.push(
-        <ul key={`list-${elements.length}`} className="list-disc pl-6 mb-6 space-y-2">
-          {currentList.map((item, i) => (
-            <li key={i}>{item}</li>
-          ))}
-        </ul>,
-      )
-      currentList = []
-    }
-  }
-
-  const flushBlockquote = () => {
-    if (blockquoteContent.length > 0) {
-      elements.push(
-        <blockquote key={`quote-${elements.length}`} className="border-l-4 border-accent pl-4 my-6 italic">
-          {blockquoteContent.map((line, i) => (
-            <p key={i}>{line.replace(/^>\s*"?|"?\s*$/g, "")}</p>
-          ))}
-        </blockquote>,
-      )
-      blockquoteContent = []
-      inBlockquote = false
-    }
-  }
-
-  lines.forEach((line, index) => {
-    const trimmedLine = line.trim()
-
-    if (!trimmedLine) {
-      flushList()
-      flushBlockquote()
-      return
-    }
-
-    // Headings
-    if (trimmedLine.startsWith("## ")) {
-      flushList()
-      flushBlockquote()
-      elements.push(
-        <h2 key={index} className="font-serif text-2xl text-foreground mt-10 mb-4">
-          {trimmedLine.replace("## ", "")}
-        </h2>,
-      )
-      return
-    }
-
-    if (trimmedLine.startsWith("### ")) {
-      flushList()
-      flushBlockquote()
-      elements.push(
-        <h3 key={index} className="font-serif text-xl text-foreground mt-8 mb-3">
-          {trimmedLine.replace("### ", "")}
-        </h3>,
-      )
-      return
-    }
-
-    // Blockquotes
-    if (trimmedLine.startsWith(">")) {
-      flushList()
-      inBlockquote = true
-      blockquoteContent.push(trimmedLine)
-      return
-    }
-
-    // List items
-    if (trimmedLine.startsWith("- ") || trimmedLine.match(/^\d+\.\s/)) {
-      flushBlockquote()
-      currentList.push(trimmedLine.replace(/^-\s+|\d+\.\s+/, ""))
-      return
-    }
-
-    // Horizontal rule
-    if (trimmedLine === "---") {
-      flushList()
-      flushBlockquote()
-      elements.push(<hr key={index} className="my-8 border-border" />)
-      return
-    }
-
-    // Regular paragraph
-    flushList()
-    flushBlockquote()
-
-    // Handle bold and italic text
-    const processedLine = trimmedLine
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.+?)\*/g, "<em>$1</em>")
-
-    elements.push(
-      <p key={index} className="mb-6 leading-relaxed" dangerouslySetInnerHTML={{ __html: processedLine }} />,
-    )
-  })
-
-  flushList()
-  flushBlockquote()
-
-  return <>{elements}</>
 }
