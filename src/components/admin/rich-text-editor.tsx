@@ -55,6 +55,45 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
       attributes: {
         class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none min-h-[400px] max-w-none p-4',
       },
+      handleKeyDown: (view, event) => {
+        // Handle Tab key for indentation
+        if (event.key === 'Tab') {
+          event.preventDefault()
+
+          // Insert 4 spaces or a tab character
+          const { state, dispatch } = view
+          const { tr } = state
+          tr.insertText('\u00A0\u00A0\u00A0\u00A0') // 4 non-breaking spaces
+          dispatch(tr)
+
+          return true
+        }
+
+        // Handle Backspace to delete 4 spaces at once
+        if (event.key === 'Backspace') {
+          const { state, dispatch } = view
+          const { selection, doc } = state
+          const { $from } = selection
+
+          // Check if we're at a position where we can look back 4 characters
+          if ($from.parent.isTextblock && selection.empty) {
+            const textBefore = $from.parent.textBetween(
+              Math.max(0, $from.parentOffset - 4),
+              $from.parentOffset
+            )
+
+            // If the last 4 characters are non-breaking spaces, delete all 4
+            if (textBefore === '\u00A0\u00A0\u00A0\u00A0') {
+              event.preventDefault()
+              const tr = state.tr.delete($from.pos - 4, $from.pos)
+              dispatch(tr)
+              return true
+            }
+          }
+        }
+
+        return false
+      },
     },
   })
 
