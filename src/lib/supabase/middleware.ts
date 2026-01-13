@@ -44,14 +44,15 @@ export async function updateSession(request: NextRequest) {
 
   // Protect admin routes
   if (request.nextUrl.pathname.startsWith('/admin')) {
+    // Allow access to login page without authentication
+    if (request.nextUrl.pathname === '/admin/login') {
+      return response
+    }
+
+    // For all other admin routes, check authentication
     if (!user) {
       // Redirect to login if not authenticated
       return NextResponse.redirect(new URL('/admin/login', request.url))
-    }
-
-    // Skip role check for login page
-    if (request.nextUrl.pathname === '/admin/login') {
-      return response
     }
 
     // Check if user has admin role
