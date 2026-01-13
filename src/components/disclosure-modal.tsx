@@ -51,7 +51,7 @@ export function DisclosureModal() {
           </p>
           <p>
             The opinions expressed by featured authors are their own and may not accurately reflect those of the
-            Buckingham Strategic Wealth® and Buckingham Strategic Partners®, collectively Buckingham Wealth Partners.
+            Main Line Briefing Room.
             Neither the Securities and Exchange Commission (SEC) nor any state or federal agency has approved, confirmed
             the accuracy, or determined the adequacy of this article.
           </p>
