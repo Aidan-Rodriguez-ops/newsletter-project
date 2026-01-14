@@ -53,7 +53,7 @@ export function DisclosureModal() {
             The opinions expressed by featured authors are their own and may not accurately reflect those of the
             Main Line Briefing Room.
             Neither the Securities and Exchange Commission (SEC) nor any state or federal agency has approved, confirmed
-            the accuracy, or determined the adequacy of this article.
+            the accuracy, or determined the adequacy of this website.
           </p>
           <p className="font-semibold text-foreground">
             LSR-21-151
