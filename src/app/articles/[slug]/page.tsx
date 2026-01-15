@@ -126,7 +126,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 <div className="lg:col-span-8">
                   {article.content ? (
                     <div
-                      className="prose prose-lg max-w-none prose-headings:font-serif prose-h1:text-3xl prose-h1:font-bold prose-h2:text-2xl prose-h2:font-semibold prose-h3:text-xl prose-h3:font-semibold prose-p:text-foreground prose-p:leading-relaxed prose-li:text-foreground prose-strong:font-bold prose-blockquote:border-l-4 prose-blockquote:border-border prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm"
+                      className="article-content prose prose-lg max-w-none prose-headings:font-serif prose-h1:text-3xl prose-h1:font-bold prose-h1:mt-6 prose-h1:mb-2 prose-h2:text-2xl prose-h2:font-semibold prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-4 prose-h3:mb-2 prose-p:text-foreground prose-p:leading-relaxed prose-li:text-foreground prose-strong:font-bold prose-blockquote:border-l-4 prose-blockquote:border-border prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground prose-blockquote:my-4 prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm"
                       dangerouslySetInnerHTML={{ __html: article.content }}
                     />
                   ) : (

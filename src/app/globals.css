@@ -123,3 +123,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Article content paragraph spacing - override prose defaults */
+.article-content p {
+  margin-bottom: 1rem !important;
+}
+
+.article-content p:last-child {
+  margin-bottom: 0 !important;
+}
