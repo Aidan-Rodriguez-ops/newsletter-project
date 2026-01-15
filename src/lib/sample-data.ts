@@ -15,9 +15,24 @@ export const sampleArticles: Article[] = []
 
 export const categories = [
   {
-    name: "Deal Flow & M&A",
-    slug: "deal-flow",
-    description: "Activism, buybacks, take-privates, and major transactions",
+    name: "The Contrarian",
+    slug: "contrarian",
+    description: "Non-consensus views on macro trends and market dynamics",
+  },
+  {
+    name: "Weekly Brief",
+    slug: "weekly-brief",
+    description: "Weekly market summary and key developments",
+  },
+  {
+    name: "Daily Snapshot",
+    slug: "daily-snapshot",
+    description: "Daily market updates and breaking news",
+  },
+  {
+    name: "Equity Opinions",
+    slug: "equity-opinions",
+    description: "Retail-focused investing views and portfolio construction",
   },
   {
     name: "Macro & Market Structure",
@@ -25,10 +40,5 @@ export const categories = [
     description: "Rates, credit markets, geopolitics, liquidity, and volatility",
   },
   { name: "Current Events", slug: "current-events", description: "Macro-focused current events impacting markets" },
-  {
-    name: "Equity Opinions",
-    slug: "equity-opinions",
-    description: "Retail-focused investing views and portfolio construction",
-  },
   { name: "Education", slug: "education", description: "Investing basics, market mechanics, and career preparation" },
 ]

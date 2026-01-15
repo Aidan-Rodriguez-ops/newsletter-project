@@ -2,11 +2,19 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ArticleCard } from "@/components/article-card"
 import { NewsletterSignup } from "@/components/newsletter-signup"
-import { sampleArticles } from "@/lib/sample-data"
+import { createServerSupabaseClient } from "@/lib/supabase/server"
 import Link from "next/link"
 
-export default function ContrarianPage() {
-  const contrarianArticles = sampleArticles.filter((a) => a.type === "contrarian")
+export default async function ContrarianPage() {
+  const supabase = await createServerSupabaseClient()
+
+  // Fetch contrarian articles from Supabase
+  const { data: contrarianArticles } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('category', 'The Contrarian')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
 
   return (
     <div className="min-h-screen bg-background">
@@ -42,16 +50,16 @@ export default function ContrarianPage() {
                 <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-6">
                   Latest Contrarian Pieces
                 </h2>
-                {contrarianArticles.length > 0 ? (
+                {contrarianArticles && contrarianArticles.length > 0 ? (
                   <div className="space-y-8">
                     {contrarianArticles.map((article) => (
                       <ArticleCard
                         key={article.slug}
                         title={article.title}
-                        excerpt={article.excerpt}
+                        excerpt={article.excerpt || ''}
                         category={article.category}
-                        categorySlug={article.categorySlug}
-                        date={article.date}
+                        categorySlug={article.category_slug}
+                        date={article.published_at || article.created_at}
                         slug={article.slug}
                         featured
                       />

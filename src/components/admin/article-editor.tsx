@@ -24,12 +24,13 @@ interface ArticleEditorProps {
 }
 
 const categories = [
-  { value: 'market-analysis', label: 'Market Analysis' },
-  { value: 'education', label: 'Education' },
-  { value: 'stock-pitch', label: 'Stock Pitch' },
+  { value: 'contrarian', label: 'The Contrarian' },
   { value: 'weekly-brief', label: 'Weekly Brief' },
   { value: 'daily-snapshot', label: 'Daily Snapshot' },
-  { value: 'contrarian', label: 'Contrarian' },
+  { value: 'equity-opinions', label: 'Equity Opinions' },
+  { value: 'macro', label: 'Macro & Market Structure' },
+  { value: 'current-events', label: 'Current Events' },
+  { value: 'education', label: 'Education' },
 ]
 
 const types = [
