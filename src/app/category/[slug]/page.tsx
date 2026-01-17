@@ -2,7 +2,8 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ArticleCard } from "@/components/article-card"
 import { NewsletterSignup } from "@/components/newsletter-signup"
-import { sampleArticles, categories } from "@/lib/sample-data"
+import { categories } from "@/lib/sample-data"
+import { createServerSupabaseClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
@@ -24,7 +25,27 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound()
   }
 
-  const categoryArticles = sampleArticles.filter((a) => a.categorySlug === slug)
+  const supabase = await createServerSupabaseClient()
+
+  // Fetch articles for this category from Supabase
+  const { data: categoryArticles } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('category_slug', slug)
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
+
+  // Fetch article counts for all categories
+  const categoryCounts: Record<string, number> = {}
+  for (const cat of categories) {
+    const { count } = await supabase
+      .from('articles')
+      .select('*', { count: 'exact', head: true })
+      .eq('category_slug', cat.slug)
+      .eq('status', 'published')
+
+    categoryCounts[cat.slug] = count || 0
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -77,16 +98,16 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
               {/* Main Content */}
               <div className="lg:col-span-2">
-                {categoryArticles.length > 0 ? (
+                {categoryArticles && categoryArticles.length > 0 ? (
                   <div className="grid grid-cols-1 gap-0">
                     {categoryArticles.map((article) => (
                       <ArticleCard
                         key={article.slug}
                         title={article.title}
-                        excerpt={article.excerpt}
+                        excerpt={article.excerpt || ''}
                         category={article.category}
-                        categorySlug={article.categorySlug}
-                        date={article.date}
+                        categorySlug={article.category_slug}
+                        date={article.published_at || article.created_at}
                         slug={article.slug}
                       />
                     ))}
@@ -121,7 +142,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                                 {cat.name}
                               </span>
                               <span className="text-xs text-muted-foreground/60">
-                                {sampleArticles.filter((a) => a.categorySlug === cat.slug).length}
+                                {categoryCounts[cat.slug] || 0}
                               </span>
                             </Link>
                           </li>
