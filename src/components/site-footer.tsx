@@ -2,7 +2,6 @@ import Link from "next/link"
 
 const footerNavigation = {
   content: [
-    { name: "Deal Flow & M&A", href: "/category/deal-flow" },
     { name: "Macro & Market Structure", href: "/category/macro" },
     { name: "Current Events", href: "/category/current-events" },
     { name: "Equity Opinions", href: "/category/equity-opinions" },
