@@ -12,7 +12,6 @@ const footerNavigation = {
     { name: "Weekly Market Brief", href: "/weekly-brief" },
     { name: "Daily Snapshot", href: "/daily-snapshot" },
     { name: "The Contrarian", href: "/the-contrarian" },
-    { name: "Stock Pitches", href: "/category/equity-opinions" },
   ],
   company: [
     { name: "About", href: "/about" },
