@@ -69,7 +69,10 @@ export function ArticleEditor({ article, mode }: ArticleEditorProps) {
 
     try {
       const slug = generateSlug(formData.title)
-      const categorySlug = generateSlug(formData.category)
+
+      // Find the category slug from the predefined categories
+      const selectedCategory = categories.find(cat => cat.label === formData.category)
+      const categorySlug = selectedCategory?.value || generateSlug(formData.category)
 
       const payload = {
         ...formData,
