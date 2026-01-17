@@ -125,12 +125,6 @@ export default function AboutPage() {
                     "Quick daily summary of index movements, top movers, and key market sentiment indicators.",
                 },
                 {
-                  title: "Weekly Stock Pitch",
-                  frequency: "Every Wednesday",
-                  description:
-                    "Deep-dive equity analysis with clear thesis, valuation framework, risks, and conclusion.",
-                },
-                {
                   title: "Educational Articles",
                   frequency: "Every Friday",
                   description:

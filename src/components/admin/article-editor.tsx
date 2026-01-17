@@ -37,7 +37,6 @@ const types = [
   { value: 'article', label: 'Article' },
   { value: 'weekly-brief', label: 'Weekly Brief' },
   { value: 'daily-snapshot', label: 'Daily Snapshot' },
-  { value: 'stock-pitch', label: 'Stock Pitch' },
   { value: 'contrarian', label: 'Contrarian' },
 ]
 

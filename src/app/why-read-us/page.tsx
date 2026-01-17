@@ -54,7 +54,7 @@ export default function WhyReadUsPage() {
                 {
                   title: "Asset Management",
                   description: "Build fundamental analysis skills and portfolio construction knowledge.",
-                  skills: ["Stock pitches", "Sector allocation", "Long-term trends"],
+                  skills: ["Fundamental analysis", "Sector allocation", "Long-term trends"],
                 },
                 {
                   title: "Trading",

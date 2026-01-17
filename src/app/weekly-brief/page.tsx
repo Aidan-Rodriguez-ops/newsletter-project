@@ -1,45 +1,53 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { MarketSummaryCard } from "@/components/market-summary-card"
 import { TopMovers } from "@/components/top-movers"
 import { ArticleCard } from "@/components/article-card"
 import { NewsletterSignup } from "@/components/newsletter-signup"
-import { sampleArticles } from "@/lib/sample-data"
 import Link from "next/link"
 
-const weeklyData = {
-  indices: [
-    { name: "S&P 500", value: "5,827.04", change: 87.45, changePercent: 1.52 },
-    { name: "NASDAQ", value: "18,342.94", change: 234.56, changePercent: 1.3 },
-    { name: "DOW", value: "42,518.28", change: 312.89, changePercent: 0.74 },
-    { name: "Russell 2000", value: "2,284.65", change: -12.34, changePercent: -0.54 },
-  ],
-  gainers: [
-    { symbol: "SMCI", name: "Super Micro", price: "892.34", change: 156.78, changePercent: 21.32 },
-    { symbol: "NVDA", name: "NVIDIA Corp", price: "148.52", change: 18.92, changePercent: 14.61 },
-    { symbol: "META", name: "Meta Platforms", price: "598.45", change: 62.31, changePercent: 11.62 },
-    { symbol: "AVGO", name: "Broadcom Inc", price: "178.92", change: 16.45, changePercent: 10.13 },
-    { symbol: "ORCL", name: "Oracle Corp", price: "142.67", change: 12.89, changePercent: 9.94 },
-  ],
-  losers: [
-    { symbol: "INTC", name: "Intel Corp", price: "21.34", change: -4.56, changePercent: -17.61 },
-    { symbol: "BA", name: "Boeing Co", price: "156.78", change: -23.45, changePercent: -13.01 },
-    { symbol: "WBA", name: "Walgreens Boots", price: "12.45", change: -1.67, changePercent: -11.83 },
-    { symbol: "CVS", name: "CVS Health", price: "52.34", change: -5.89, changePercent: -10.12 },
-    { symbol: "PFE", name: "Pfizer Inc", price: "26.78", change: -2.45, changePercent: -8.39 },
-  ],
-  mAndA: [
+export default function WeeklyBriefPage() {
+  const [marketData, setMarketData] = useState<any>(null)
+  const [relatedArticles, setRelatedArticles] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // Fetch market data from API
+        const marketResponse = await fetch('/api/market-overview')
+        const marketJson = await marketResponse.json()
+        setMarketData(marketJson)
+
+        // Fetch related articles
+        const articlesResponse = await fetch('/api/articles?category=weekly-brief&limit=3')
+        const articlesJson = await articlesResponse.json()
+        setRelatedArticles(articlesJson.articles || [])
+
+        setLoading(false)
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  const weekOfDate = new Date().toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  })
+
+  const mAndAData = [
     { acquirer: "Vista Equity", target: "Instructure Holdings", value: "$4.8B", premium: "28%", status: "Announced" },
     { acquirer: "Brookfield", target: "Triton International", value: "$13.3B", premium: "35%", status: "Pending" },
     { acquirer: "Private Equity Consortium", target: "GoDaddy Inc", value: "$8.2B", premium: "22%", status: "Rumored" },
-  ],
-}
-
-export default function WeeklyBriefPage() {
-  const weekOfDate = "January 6-10, 2025"
-  const relatedArticles = sampleArticles
-    .filter((a) => a.type === "weekly-brief" || a.categorySlug === "macro")
-    .slice(0, 3)
+  ]
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,17 +89,27 @@ export default function WeeklyBriefPage() {
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-8">
               Weekly Index Performance
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {weeklyData.indices.map((index) => (
-                <MarketSummaryCard
-                  key={index.name}
-                  name={index.name}
-                  value={index.value}
-                  change={index.change}
-                  changePercent={index.changePercent}
-                />
-              ))}
-            </div>
+            {loading ? (
+              <div className="text-center text-muted-foreground py-12">
+                Loading market data...
+              </div>
+            ) : marketData?.indices ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {marketData.indices.map((index: any) => (
+                  <MarketSummaryCard
+                    key={index.name}
+                    name={index.name}
+                    value={index.value}
+                    change={index.change}
+                    changePercent={index.changePercent}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-muted-foreground py-12">
+                Market data unavailable
+              </div>
+            )}
           </div>
         </section>
 
@@ -101,7 +119,17 @@ export default function WeeklyBriefPage() {
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-8">
               Top Weekly Movers
             </h2>
-            <TopMovers gainers={weeklyData.gainers} losers={weeklyData.losers} />
+            {loading ? (
+              <div className="text-center text-muted-foreground py-12">
+                Loading top movers...
+              </div>
+            ) : marketData?.topMovers ? (
+              <TopMovers gainers={marketData.topMovers.gainers} losers={marketData.topMovers.losers} />
+            ) : (
+              <div className="text-center text-muted-foreground py-12">
+                Top movers data unavailable
+              </div>
+            )}
           </div>
         </section>
 
@@ -131,7 +159,7 @@ export default function WeeklyBriefPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {weeklyData.mAndA.map((deal, index) => (
+                  {mAndAData.map((deal, index) => (
                     <tr key={index}>
                       <td className="py-4 pr-4 text-sm text-foreground">{deal.acquirer}</td>
                       <td className="py-4 pr-4 text-sm text-foreground">{deal.target}</td>
@@ -156,8 +184,8 @@ export default function WeeklyBriefPage() {
               </table>
             </div>
             <p className="mt-4 text-xs text-muted-foreground">
-              <Link href="/category/deal-flow" className="text-accent hover:underline">
-                View all Deal Flow & M&A coverage →
+              <Link href="/category/macro" className="text-accent hover:underline">
+                View all Macro & Market Structure coverage →
               </Link>
             </p>
           </div>
@@ -205,19 +233,29 @@ export default function WeeklyBriefPage() {
                 <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-6">
                   Related Analysis
                 </h2>
-                <div className="flex flex-col">
-                  {relatedArticles.map((article) => (
-                    <ArticleCard
-                      key={article.slug}
-                      title={article.title}
-                      excerpt={article.excerpt}
-                      category={article.category}
-                      categorySlug={article.categorySlug}
-                      date={article.date}
-                      slug={article.slug}
-                    />
-                  ))}
-                </div>
+                {loading ? (
+                  <div className="text-center text-muted-foreground py-12">
+                    Loading articles...
+                  </div>
+                ) : relatedArticles.length > 0 ? (
+                  <div className="flex flex-col">
+                    {relatedArticles.map((article) => (
+                      <ArticleCard
+                        key={article.slug}
+                        title={article.title}
+                        excerpt={article.excerpt || ''}
+                        category={article.category}
+                        categorySlug={article.category_slug}
+                        date={article.published_at || article.created_at}
+                        slug={article.slug}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground py-12">
+                    No related articles available yet.
+                  </div>
+                )}
               </div>
 
               <aside>
